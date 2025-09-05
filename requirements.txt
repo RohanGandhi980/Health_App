@@ -5,5 +5,5 @@ scikit-learn
 requests
 transformers
 torch
-joblib
-python-dotenv
+sentencepiece
+pydeck

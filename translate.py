@@ -1,51 +1,34 @@
-# translate.py
-from functools import lru_cache
-import torch
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+from transformers import MarianMTModel, MarianTokenizer
 
-MODEL_ID = "facebook/nllb-200-distilled-600M"
-
-LANG_TAGS = {
-    "English": "eng_Latn",   
-    "Hindi": "hin_Deva",
-    "Assamese": "asm_Beng",
+MODEL_MAP = {
+    "Hindi": "Helsinki-NLP/opus-mt-en-hi",
+    "Assamese": "Helsinki-NLP/opus-mt-en-as"
 }
 
-@lru_cache(maxsize=1)
-def _load_nllb():
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
-    model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_ID)
-    device = "mps" if torch.backends.mps.is_available() else (
-        "cuda" if torch.cuda.is_available() else "cpu"
-    )
-    model.to(device)
-    return tokenizer, model, device
+loaded_models = {}
 
 def multilingual_alert(message: str, target_lang: str) -> str:
     """
-    Translate an English message into Hindi/Assamese using NLLB.
-    English returns the original message.
+    Translate the message into the target language (Hindi, Assamese, or English).
+    Falls back to the original message if translation fails.
     """
     if target_lang == "English":
-        return message
+        return message  
 
     try:
-        tokenizer, model, device = _load_nllb()
+        if target_lang not in loaded_models:
+            model_name = MODEL_MAP[target_lang]
+            tokenizer = MarianTokenizer.from_pretrained(model_name)
+            model = MarianMTModel.from_pretrained(model_name)
+            loaded_models[target_lang] = (tokenizer, model)
 
-        tokenizer.src_lang = LANG_TAGS["English"]
-        tgt_lang = LANG_TAGS[target_lang]
+        tokenizer, model = loaded_models[target_lang]
 
-        inputs = tokenizer(message, return_tensors="pt").to(device)
+        inputs = tokenizer([message], return_tensors="pt", padding=True)
+        translated = model.generate(**inputs, max_length=256, num_beams=4)
+        output = tokenizer.decode(translated[0], skip_special_tokens=True)
 
-        forced_id = tokenizer.convert_tokens_to_ids(tgt_lang)
-        outputs = model.generate(
-            **inputs,
-            forced_bos_token_id=forced_id,
-            max_length=256,
-            num_beams=4,
-        )
-
-        return tokenizer.batch_decode(outputs, skip_special_tokens=True)[0]
+        return output
 
     except Exception as e:
-        return f"[{target_lang} translation unavailable] {message}  (error: {e})"
+        return f"[{target_lang} translation unavailable] {message} (error: {e})"
