@@ -63,7 +63,7 @@ st.pydeck_chart(r)
 
 
 st.subheader("🌐 Multilingual Alerts")
-languages = ["English", "Hindi", "Assamese"]          
+languages = ["English", "Hindi"]         # Assamese disabled for now
 choice = st.selectbox("Choose Language", languages)
 
 for _, row in predictions.iterrows():
@@ -71,6 +71,6 @@ for _, row in predictions.iterrows():
         f"Village {row.village_id}: Risk = {row.outbreak_risk}, "
         f"Probability = {row.probability:.2f}. Please boil water before use."
     )
-    translated_message = multilingual_alert(base_message, choice)  
+    translated_message = multilingual_alert(base_message, choice)
     st.write(f"**{choice} Alert:** {translated_message}")
 

@@ -3,10 +3,9 @@ pandas
 numpy
 scikit-learn
 requests
-transformers
-torch
-python-dotenv
 pydeck
-altair
-transformers==4.37.2
+transformers==4.56.1
+torch==2.8.0
 sentencepiece
+sacremoses
+python-dotenv
