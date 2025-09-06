@@ -8,14 +8,14 @@ def multilingual_alert(message: str, target_lang: str) -> str:
         return message
     elif target_lang == "Hindi":
         try:
-        
-            protected = re.sub(r"(\d+(\.\d+)?)", r"<NUM>\1</NUM>", message)
-
             
+            numbers = re.findall(r"[\d.]+", message)  
+            protected = re.sub(r"[\d.]+", "<NUM>", message)
+
             translated = hindi_translator(protected)[0]['translation_text']
 
-            
-            translated = re.sub(r"<NUM>(\d+(\.\d+)?)</NUM>", r"\1", translated)
+            for num in numbers:
+                translated = translated.replace("<NUM>", num, 1)
 
             return translated
         except Exception as e:
