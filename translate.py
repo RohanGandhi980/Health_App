@@ -1,14 +1,14 @@
-from transformers import MarianMTModel, MarianTokenizer
-
 LANG_MODELS = {
-    "Hindi": "Helsinki-NLP/opus-mt-en-hi",
-    "Assamese": "Helsinki-NLP/opus-mt-en-as"
+    "Hindi": "Helsinki-NLP/opus-mt-en-hi"
+    # Assamese removed because no model exists
 }
 
 def multilingual_alert(message: str, target_lang: str) -> str:
     if target_lang == "English":
         return message
-    
+    if target_lang == "Assamese":
+        return f"[Assamese translation unavailable] {message}"
+
     try:
         model_name = LANG_MODELS[target_lang]
         tokenizer = MarianTokenizer.from_pretrained(model_name)
