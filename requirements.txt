@@ -8,3 +8,5 @@ torch
 python-dotenv
 pydeck
 altair
+transformers==4.37.2
+sentencepiece
