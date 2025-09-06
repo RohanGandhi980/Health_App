@@ -1,13 +1,12 @@
 import re
 from transformers import pipeline
 
-# Load translators
+# Load only English ↔ Hindi translator
 hindi_translator = pipeline("translation", model="Helsinki-NLP/opus-mt-en-hi")
-assamese_translator = pipeline("translation", model="Helsinki-NLP/opus-mt-en-as")
 
 def multilingual_alert(message: str, target_lang: str) -> str:
     """
-    Translates alerts into Hindi or Assamese while keeping numbers/symbols intact.
+    Translates alerts into Hindi. English returns the original message.
     """
     if target_lang == "English":
         return message
@@ -26,13 +25,11 @@ def multilingual_alert(message: str, target_lang: str) -> str:
 
         protected = re.sub(r"[\d.]+", replacer, message)
 
-        # Step 2: Translate based on target_lang
+        # Step 2: Translate only to Hindi
         if target_lang == "Hindi":
             translated = hindi_translator(protected)[0]["translation_text"]
-        elif target_lang == "Assamese":
-            translated = assamese_translator(protected)[0]["translation_text"]
         else:
-            return message  # fallback
+            return message  # fallback for unsupported langs
 
         # Step 3: Restore placeholders back
         for key, val in placeholders.items():
