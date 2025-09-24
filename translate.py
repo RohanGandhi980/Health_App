@@ -1,34 +1,42 @@
 # translate.py
-from functools import lru_cache
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+from deep_translator import GoogleTranslator
 
-HI_MODEL_ID = "Helsinki-NLP/opus-mt-en-hi"
+SUPPORTED_LANGS = {
+    "en": "english",
+    "hi": "hindi",
+    "as": "assamese",
+    "bn": "bengali",
+    "or": "odia",
+    "ne": "nepali",
+    "ta": "tamil",
+    "te": "telugu",
+    "kn": "kannada",
+    "ml": "malayalam"
+}
 
-@lru_cache(maxsize=1)
-def _load_hi():
-    """
-    Lazy-load and cache the English→Hindi model once per process.
-    """
-    tokenizer = AutoTokenizer.from_pretrained(HI_MODEL_ID)
-    model = AutoModelForSeq2SeqLM.from_pretrained(HI_MODEL_ID)
-    return tokenizer, model
-
-def multilingual_alert(message: str, target_lang: str) -> str:
-    """
-    English → return as-is
-    Hindi   → translate with Helsinki-NLP/opus-mt-en-hi
-    Any other language → return as-is (temporary)
-    """
-    if target_lang == "English":
-        return message
-    if target_lang != "Hindi":
-        # Assamese (and others) temporarily disabled
-        return message
-
+def translate_text(text: str, to_lang: str, from_lang: str = "en") -> str:
+    """Translate text using Google Translate (via deep-translator)."""
     try:
-        tokenizer, model = _load_hi()
-        inputs = tokenizer(message, return_tensors="pt")
-        outputs = model.generate(**inputs, max_new_tokens=128, num_beams=4)
-        return tokenizer.decode(outputs[0], skip_special_tokens=True)
+        if to_lang not in SUPPORTED_LANGS:
+            return f"[Unsupported-Language:{to_lang}] {text}"
+        if to_lang == from_lang:
+            return text
+
+        translated = GoogleTranslator(
+            source=SUPPORTED_LANGS[from_lang],
+            target=SUPPORTED_LANGS[to_lang]
+        ).translate(text)
+        return translated
     except Exception as e:
-        return f"[Hindi translation unavailable] {message} (error: {e})"
+        print(f"[Translation Error] {e}")
+        return f"[Fallback-English] {text}"
+
+def multilingual_alert(text: str, target_lang: str = "en") -> str:
+    """Wrapper to generate alerts in chosen language."""
+    return translate_text(text, to_lang=target_lang, from_lang="en")
+
+
+if __name__ == "__main__":
+    sample = "Village 1: High outbreak risk. Please boil water."
+    print("Hindi:", multilingual_alert(sample, "hi"))
+    print("Assamese:", multilingual_alert(sample, "as"))

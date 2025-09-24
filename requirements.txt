@@ -1,11 +1,17 @@
-streamlit
 pandas
 numpy
 scikit-learn
-requests
-pydeck
-transformers==4.56.1
-torch==2.8.0
+joblib
+python-dotenv
+fastapi
+uvicorn
+
+# Translation files
+transformers>=4.41.0
+torch
 sentencepiece
 sacremoses
-python-dotenv
+
+tqdm
+deep-translator==1.11.4
+
